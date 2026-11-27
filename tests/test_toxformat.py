@@ -69,6 +69,23 @@ class WorkflowTest(unittest.TestCase):
             raise AssertionError((process.returncode, process.stdout[-800:], process.stderr[-800:]))
         return json.loads(process.stdout)
 
+    def test_partial_red_bold_survives_docx_to_paste_html(self):
+        marked = self.work / "文献解析-局部红色加粗.docx"
+        with zipfile.ZipFile(FILES[0]) as source, zipfile.ZipFile(marked, "w") as dest:
+            for entry in source.infolist():
+                data = source.read(entry)
+                if entry.filename == "word/document.xml":
+                    data = data.replace(b"<w:b/>", b'<w:b/><w:color w:val="C00000"/>')
+                dest.writestr(entry, data)
+        result = self.command("format", marked, "--out", self.work / "red")
+        folder = Path(result["output"])
+        manifest = json.loads((folder / "复验清单.json").read_text(encoding="utf-8"))
+        findings = [s["text"] for b in manifest["blocks"] for s in b["added_emphasis"]
+                    if s.get("kind") == "finding"]
+        self.assertEqual(findings, ["原始读数"])
+        body = (folder / "正文.html").read_text(encoding="utf-8")
+        self.assertIn('color:#5D4679;"><span leaf="">原始读数</span></strong>', body)
+
     def test_each_slot_owns_title_credit_figure_caption_link_qr(self):
         from base64 import b64decode
 

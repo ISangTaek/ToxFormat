@@ -54,6 +54,16 @@ class VioletTest(unittest.TestCase):
         self.assertEqual([block.text[a:z] for a, z in spans], ["第一组表现更好。"])
         self.assertEqual(key_sentences(article, "none"), {})
 
+    def test_split_red_marks_share_the_sentence_budget(self):
+        from violet_emphasis import key_sentences
+        red = (("bold", True), ("color", "FF0000"))
+        runs = [Run("记录"), Run("甲", red), Run("组", red), Run("和"), Run("乙组", red), Run("。")]
+        blocks = [Block(str(i), runs) for i in range(4)]
+        spans = key_sentences(Article(blocks, {}, []))
+        self.assertEqual(list(spans), ["0", "1", "2"])
+        for block in blocks[:3]:
+            self.assertEqual([block.text[a:z] for a, z in spans[block.id]], ["甲组", "乙组"])
+
     def test_reprint_notice_must_contain_terms_at_the_end(self):
         from reprint_notice import has_notice
         policy = "未经授权禁止转载。"

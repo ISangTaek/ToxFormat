@@ -47,25 +47,43 @@ DETAIL = re.compile(r"例如|举例|以.{1,15}为例|未来|有望|旨在|此前
 
 
 def source_bold_sentences(article):
-    """Use only whole sentences marked bold by the author, in publication order."""
+    """Keep author-marked sentences or red bold excerpts, budgeting by sentence."""
     selected = {}
     count = 0
     for block in article.blocks:
         if block.role not in ("body", "field", "list", "note"):
             continue
         # Word can split a single sentence into runs for fonts, links and revisions.
-        bold = [bool(dict(run.marks).get("bold")) for run in block.runs for _ in run.text]
+        bold = []
+        red_ranges = []
+        for run in block.runs:
+            marks = dict(run.marks)
+            left = len(bold)
+            bold.extend([bool(marks.get("bold"))] * len(run.text))
+            color = marks.get("color", "")
+            if run.text and marks.get("bold") and re.fullmatch(r"[0-9a-fA-F]{6}", color):
+                red, green, blue = bytes.fromhex(color)
+                # Include dark red and red tints; exclude oranges, pink-purple and grays.
+                if red - max(green, blue) >= 30 and abs(green - blue) <= (red - min(green, blue)) / 3:
+                    if red_ranges and red_ranges[-1][1] == left:
+                        left = red_ranges.pop()[0]
+                    red_ranges.append((left, len(bold)))
         label = LABEL.match(block.text.lstrip())
         for start, sentence in sentences(block.text):
             end = start + len(sentence)
             if label and start == len(block.text) - len(block.text.lstrip()):
                 start += label.end()
             words = [i for i in range(start, end) if block.text[i].isalnum()]
-            if not words or not all(bold[i] for i in words):
+            if not words:
                 continue
-            if not re.search(r"""[。！？.!?][”」』’"']*$""", sentence):
+            if all(bold[i] for i in words) and re.search(r"""[。！？.!?][”」』’"']*$""", sentence):
+                spans = [(start, end)]
+            else:
+                spans = [(max(a, start), min(z, end)) for a, z in red_ranges if a < end and z > start]
+                spans = [(a, z) for a, z in spans if any(c.isalnum() for c in block.text[a:z])]
+            if not spans:
                 continue
-            selected.setdefault(block.id, []).append((start, end))
+            selected.setdefault(block.id, []).extend(spans)
             count += 1
             if count == 3:
                 return selected
