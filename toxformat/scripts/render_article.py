@@ -328,12 +328,17 @@ class Renderer:
             )
         return self.para(self.inline(b))
 
-    def render(self):
+    def render(self, follow=False):
+        from publication_art import FOLLOW, artwork
+
+        header, footer = artwork(self.column['prefixes'][0], self.image_map)
         bs = self.article.blocks
-        pieces = []
-        follow = self.part("刊首关注")
+        pieces = [header] if header else []
         if follow:
-            pieces.append(fill(follow, {"公众号名称": esc(CATALOG["account"])}))
+            invitation = self.part("刊首关注") or FOLLOW
+            pieces.append(fill(invitation, {"公众号名称": esc(CATALOG["account"])}))
+        self.front_count = len(pieces)
+        self.header_images = int(bool(header))
         i = 0
         while i < len(bs):
             block = bs[i]
@@ -369,6 +374,7 @@ class Renderer:
                 self.divider()
                 + f'<p style="text-align:center;font:13px Georgia,serif;letter-spacing:3px;color:{self.ink};">{leaf("END")}</p>'
             )
+        pieces.append(footer)
         container = self.part("全局容器") or self.part("完整文章模板骨架")
         match = re.search(r"<section\b[^>]*>", container)
         start = (

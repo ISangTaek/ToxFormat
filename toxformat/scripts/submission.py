@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from publication_art import last_body_image, search_card
 from manuscript import Article, Block, Run, read_word
 from sections import (
     CATALOG,
@@ -21,6 +22,12 @@ from sections import (
 def read_one(path, column):
     if path.suffix.lower() == ".docx":
         raw = read_word(path)
+        index = last_body_image((b.text, b.has_image) for b in raw.blocks)
+        if index is not None:
+            block = raw.blocks[index]
+            block.runs = [r for r in block.runs if not search_card(r.image)]
+            if not block.runs and not block.rows:
+                raw.blocks.pop(index)
     elif path.suffix.lower() in {".md", ".markdown", ".txt"}:
         raw = read_markup(path)
     else:

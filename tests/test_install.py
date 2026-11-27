@@ -24,7 +24,10 @@ class InstallerTest(unittest.TestCase):
             self.assertEqual([p.parent.name for p in skills.rglob("SKILL.md")], ["toxformat"])
             self.assertFalse(backup.is_relative_to(skills))
             self.assertEqual((backup / "gzh-design/private-theme.md").read_bytes(), b"my theme")
-            self.assertEqual(installer.inventory(installed), installer.inventory(ROOT / "toxformat"))
+            installed_files = installer.inventory(installed)
+            for key, digest in installer.inventory(ROOT / "toxformat").items():
+                self.assertEqual(installed_files[key], digest)
+            self.assertEqual(installer.inventory(installed / "栏目头图与尾图"), installer.inventory(ROOT / "栏目头图与尾图"))
             self.assertIsNone(installer.install(skills, migrate=True)[1])
             (installed / "editor-resource.md").write_text("编辑自加资料", encoding="utf-8")
             _, previous = installer.install(skills, migrate=True)

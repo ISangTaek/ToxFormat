@@ -66,7 +66,11 @@ def install(skills_dir, migrate=False):
         "name: gzh-design" in (legacy / "SKILL.md").read_text(encoding="utf-8-sig")
     ):
         raise ValueError("gzh-design 目录包含其他技能，已保留原目录。")
+    art_dir = SOURCE.parent / "栏目头图与尾图"
+    if not (art_dir / "未毒先知_公众号尾图.png").is_file():
+        raise ValueError("项目包缺少统一尾图。")
     contents = inventory(SOURCE)
+    contents.update({art_dir.name + "/" + k: v for k, v in inventory(art_dir).items()})
     replace = not (current.is_dir() and inventory(current) == contents)
     if not replace and not legacy_active:
         return current, None
@@ -78,6 +82,7 @@ def install(skills_dir, migrate=False):
         staged = Path(stage) / "toxformat"
         if replace:
             shutil.copytree(SOURCE, staged, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+            shutil.copytree(art_dir, staged / art_dir.name)
             if inventory(staged) != contents:
                 raise OSError("安装副本校验失败。")
         save = None

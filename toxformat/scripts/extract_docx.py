@@ -12,6 +12,8 @@
 提取不了的复杂结构（表格、文本框）会以「[表格：…]」占位并在 stderr 提示。
 """
 
+from publication_art import last_body_image, search_card
+import hashlib
 import argparse
 import os
 import re
@@ -91,7 +93,9 @@ def extract(docx_path, out_md):
     lines, img_n, skipped = [], 0, 0
 
     body = doc.find(f"{W}body")
-    for el in body:
+    elements = list(body)
+    last = last_body_image((para_text(el).strip("* "), any(True for _ in el.iter(f"{A}blip"))) for el in elements)
+    for idx, el in enumerate(elements):
         tag = el.tag
         if tag == f"{W}tbl":
             # 表格 → Markdown 表格，保住行列结构（合并单元格按普通格处理）
@@ -119,11 +123,14 @@ def extract(docx_path, out_md):
             src = media_of.get(rid)
             if not src:
                 continue
+            data = z.read(src)
+            if idx == last and search_card(hashlib.sha256(data).hexdigest()):
+                continue
             os.makedirs(img_dir, exist_ok=True)
             img_n += 1
             fname = f"{img_n:02d}-" + os.path.basename(src)
             with open(os.path.join(img_dir, fname), "wb") as f:
-                f.write(z.read(src))
+                f.write(data)
             lines.append(f"![](images/{fname})")
             lines.append("")
         text = para_text(p).strip()

@@ -49,6 +49,33 @@
         "暴露水平",
         "目标物种"
       ]
+    },
+    "政策法规追踪": {
+      "prefixes": [
+        "政策法规追踪"
+      ],
+      "default": "graphite-minimal",
+      "structure": "article",
+      "max_emphasis": 2,
+      "terms": []
+    },
+    "行业动态解读": {
+      "prefixes": [
+        "行业动态解读"
+      ],
+      "default": "graphite-minimal",
+      "structure": "article",
+      "max_emphasis": 2,
+      "terms": []
+    },
+    "科普文化传播": {
+      "prefixes": [
+        "科普文化传播"
+      ],
+      "default": "graphite-minimal",
+      "structure": "article",
+      "max_emphasis": 2,
+      "terms": []
     }
   },
   "themes": {

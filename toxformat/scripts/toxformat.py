@@ -91,7 +91,7 @@ def preview_page(body, renderer):
                         name = f"第{b.paper}篇-{name}"
                     mime = article.media.get(r.image, ("",))[0]
                     downloads.append(
-                        f'<a data-i="{picture_index}" href="#" download="{name}.{MEDIA_EXT.get(mime, "bin")}">{name}</a>'
+                        f'<a data-i="{picture_index + renderer.header_images}" href="#" download="{name}.{MEDIA_EXT.get(mime, "bin")}">{name}</a>'
                     )
                     picture_index += 1
         values = {
@@ -101,6 +101,7 @@ def preview_page(body, renderer):
             "BYLINE": h(article.author) + "　" if article.author else "",
             "ACCOUNT": h(CATALOG["account"]),
             "FILENAME": h(slug(article.title) + ".html"),
+            "FRONT_COUNT": str(renderer.front_count),
             "HAS_NOTE": "yes" if article.blocks and article.blocks[0].role == "note" else "no",
             "DOWNLOADS": "<h3>稿件素材</h3><nav>" + "".join(downloads) + "</nav>" if downloads else "",
         }
@@ -232,7 +233,7 @@ def execute(args):
         raise ValueError("无法识别命令")
     mapping = image_mapping(args.image_map)
     renderer = Renderer(article, col, theme_id, mapping)
-    body = renderer.render()
+    body = renderer.render(follow=args.follow)
     errors, warnings, leaf_count = validate(body)
     if errors:
         raise ValueError("公众号 HTML 校验错误：" + "、".join(errors))
@@ -313,6 +314,7 @@ def main():
             cmd.add_argument("--media-dir", help="按图片校验值提取 Word 中的原图和二维码")
             cmd.add_argument("--save", help="将完整 JSON 保存到文件")
         if name == "format":
+            cmd.add_argument("--follow", action="store_true", help="按编辑要求加入刊首关注提示")
             cmd.add_argument("--out", default="ToxFormat输出")
             cmd.add_argument("--image-map", help="可选的图片 SHA-256 到已上传素材 HTTPS 地址的 JSON")
     args = parser.parse_args()

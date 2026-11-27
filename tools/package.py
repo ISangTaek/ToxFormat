@@ -18,11 +18,13 @@ def members(paths):
     )
 
 
-def write_archive(path, files):
+def write_archive(path, files, skill_only=False):
     path.parent.mkdir(exist_ok=True)
     with ZipFile(path, "w", ZIP_DEFLATED) as archive:
         for item in files:
             name = item.relative_to(ROOT).as_posix()
+            if skill_only and name.startswith("栏目头图与尾图/"):
+                name = "toxformat/" + name
             info = ZipInfo(name, (2026, 1, 1, 0, 0, 0))
             info.create_system = 3
             info.external_attr = 0o100644 << 16
@@ -43,7 +45,7 @@ def write_archive(path, files):
 
 
 if __name__ == "__main__":
-    skill = members([ROOT / "toxformat"])
+    skill = members([ROOT / "toxformat", ROOT / "栏目头图与尾图"])
     other = members(
         [
             ROOT / s
@@ -60,4 +62,4 @@ if __name__ == "__main__":
     )
     for label, files in (("ToxFormat", skill), ("ToxFormat-project", sorted(skill + other))):
         target = ROOT / "dist" / f"{label}-{VERSION}.zip"
-        print(write_archive(target, files), target.name)
+        print(write_archive(target, files, skill_only=label == "ToxFormat"), target.name)

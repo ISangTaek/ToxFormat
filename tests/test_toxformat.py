@@ -82,7 +82,7 @@ class WorkflowTest(unittest.TestCase):
                 originals = [doc.read(n) for n in doc.namelist() if n.startswith("word/media/")]
             figures = [i["image"] for b in blocks if b["paper"] == slot for i in b["images"]]
             self.assertEqual([hashlib.sha256(x).hexdigest() for x in originals], figures)
-            rendered = self.html.image_sources[(slot - 1) * 2 : slot * 2]
+            rendered = self.html.image_sources[1 + (slot - 1) * 2 : 1 + slot * 2]
             self.assertEqual(originals, [b64decode(x.split(",", 1)[1]) for x in rendered])
             url = "https://example.org/toxformat-fixtures/" + code
             start = self.html.text.index(title)
@@ -93,10 +93,14 @@ class WorkflowTest(unittest.TestCase):
             self.assertIn(url, self.html.targets)
             prior = stop
         self.assertEqual(self.html.text.count("转载须知"), 1)
+        self.assertEqual(self.html.text.count("扫描二维码"), 3)
         self.assertTrue(self.html.text.endswith("END"))
         self.assertNotIn("本文看点", self.html.text)
         self.assertNotIn("编者按", self.html.text)
-        self.assertEqual(self.html.text.count("点击上方"), 1)
+        self.assertEqual(self.html.text.count("点击上方"), 0)
+        art = ROOT / "栏目头图与尾图"
+        self.assertEqual(b64decode(self.html.image_sources[0].split(",")[1]), (art / "论文速读_栏目头图.png").read_bytes())
+        self.assertEqual(b64decode(self.html.image_sources[-1].split(",")[1]), (art / "未毒先知_公众号尾图.png").read_bytes())
 
     def test_repeated_run_and_alias_are_byte_identical(self):
         repeat = self.command(
@@ -188,8 +192,9 @@ class WorkflowTest(unittest.TestCase):
         )
         self.assertEqual(self.command("inspect", FILES[0], "--draft")["theme"], "文献速读-紫罗兰")
         overrides = self.command(
-            "format", *FILES, "--theme", "石墨极简风", "--note", "编辑明确提供按语。", "--out", self.work
+            "format", *FILES, "--theme", "石墨极简风", "--follow", "--note", "编辑明确提供按语。", "--out", self.work
         )
+        self.assertEqual((Path(overrides["output"]) / "正文.html").read_text(encoding="utf-8").count("点击上方"), 1)
         self.assertEqual(overrides["theme_id"], "graphite-minimal")
         self.assertIn(
             "编辑明确提供按语。", (Path(overrides["output"]) / "正文.html").read_text(encoding="utf-8")
@@ -204,7 +209,7 @@ class WorkflowTest(unittest.TestCase):
                 self.assertTrue(all(title in html.text for title in TITLES))
                 self.assertIn("原始读数", html.text)
                 self.assertNotIn("{{", body)
-                self.assertEqual(len(html.image_sources), 6)
+                self.assertEqual(len(html.image_sources), 8)
 
     def test_default_review_and_follow_up(self):
         report = (self.out / "审稿参考.md").read_text(encoding="utf-8")

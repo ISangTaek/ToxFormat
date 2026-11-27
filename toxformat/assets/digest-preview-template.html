@@ -33,7 +33,7 @@ button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #7b
 #gzhToast.show{opacity:1}
 @media(max-width:600px){.paper{margin:0 auto 28px;padding:0 2px 8px;border:0}.bar-inner{padding:8px;gap:5px}.links,.actions{gap:6px}.links b{padding-left:7px}.bar button{padding:7px 8px}.meta{padding:21px 14px 14px}}
 </style></head>
-    <body style="--accent:#5D4679" data-filename="{{FILENAME}}" data-first-note="{{HAS_NOTE}}">
+    <body style="--accent:#5D4679" data-filename="{{FILENAME}}" data-first-note="{{HAS_NOTE}}" data-front-count="{{FRONT_COUNT}}">
     <header class="bar"><nav class="bar-inner"><div class="links"><span style="font-size:12px;color:#65576C;">主题预览</span><b>{{THEME}}</b></div>
     <div class="actions"><button id="manage" type="button">稿件设置</button><button class="copy" id="gzhCopyBtn" type="button" onclick="gzhCopy()">复制到公众号</button></div></nav></header>
     <main class="paper"><header class="meta"><h1>{{TITLE}}</h1><p>{{BYLINE}}<b>{{ACCOUNT}}</b></p></header>
@@ -100,7 +100,8 @@ const panel=document.querySelector('.panel');
 const region=document.querySelector('#gzh-content').firstElementChild;
 const titleEl=document.querySelector('.meta h1');
 const noteInput=document.getElementById('noteInput');
-let currentNote=document.body.dataset.firstNote==='yes'?region.children[1]:null;
+const frontCount=Number(document.body.dataset.frontCount);
+let currentNote=document.body.dataset.firstNote==='yes'?region.children[frontCount]:null;
 let appliedNote=currentNote?.lastElementChild?.innerText||'';
 document.getElementById('manage').onclick=()=>{noteInput.value=appliedNote;panel.showModal();};
 document.getElementById('cancel').onclick=()=>panel.close();
@@ -115,7 +116,7 @@ document.getElementById('apply').onclick=()=>{
       if(index) inner.append(document.createElement('br'));
       span.textContent=line;inner.append(span);
     });
-    region.firstElementChild.after(currentNote);
+    region.insertBefore(currentNote,region.children[frontCount] || null);
   }
   panel.close();gzhShowToast('已应用到预览');
 };
