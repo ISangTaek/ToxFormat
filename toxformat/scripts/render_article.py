@@ -99,21 +99,16 @@ class Renderer:
         self.line = self.theme["line"]
         self.dark = self.theme["title"]
         self.paper = self.theme["paper"]
-        self.spans = {b.id: select_spans(b, self.column) for b in article.walk()}
         self.violet = theme_id in ("violet-folio", "violet-digest")
+        self.spans = {b.id: [] if self.violet else select_spans(b, self.column) for b in article.walk()}
         self.special = {}
         if self.violet:
             findings = key_sentences(article)
             journals = article_journals(article)
             for block in article.walk():
                 spans = [(a, z, "journal") for a, z in journals.get(block.id, ())]
-                if block.id in findings:
-                    spans.append((*findings[block.id], "finding"))
+                spans.extend((a, z, "finding") for a, z in findings.get(block.id, ()))
                 self.special[block.id] = spans
-                self.spans[block.id] = [
-                    (a, z) for a, z in self.spans[block.id]
-                    if not any(a < end and start < z for start, end, _ in spans)
-                ]
         self.images = {}
         self.image_map = image_map or {}
         self.heading_no = 0
@@ -183,11 +178,11 @@ class Renderer:
                 if not self.violet and any(x <= a < y and t == "em" for x, y, t in ranges):
                     css.append(auto_underline)
                 active = {t for x, y, t in ranges if x <= a < y}
-                if self.violet and (active & {"finding", "journal", "em"} or marks.get("bold")):
+                if self.violet and active & {"finding", "journal"}:
                     color = self.ink if "finding" in active and "journal" not in active else "#000000"
                     italic = "font-style:italic;" if "journal" in active else ""
                     value = f'<strong style="font-weight:700;color:{color};{italic}">{value}</strong>'
-                elif marks.get("bold"):
+                elif not self.violet and marks.get("bold"):
                     value = f'<strong style="font-weight:700;color:{self.dark};">{value}</strong>'
                 if marks.get("italic"):
                     css.append("font-style:italic;")
@@ -199,7 +194,7 @@ class Renderer:
                 if deco:
                     css.append("text-decoration:" + deco + ";")
                 color = marks.get("color", "")
-                if re.fullmatch("[0-9a-fA-F]{6}", color) and color.lower() not in {"000000", "ffffff"}:
+                if not self.violet and re.fullmatch("[0-9a-fA-F]{6}", color) and color.lower() not in {"000000", "ffffff"}:
                     css.append("color:#" + color + ";")
                 hilite = marks.get("highlight", "")
                 if re.fullmatch("[a-zA-Z]+", hilite) and hilite not in ("none", "auto"):
@@ -311,6 +306,8 @@ class Renderer:
             m = LABEL.match(b.text.lstrip())
             if m:
                 cut = len(b.text) - len(b.text.lstrip()) + m.end()
+                if self.violet:
+                    return self.para(self.inline(b))
                 return self.para(
                     f'<strong style="color:{self.ink};">{self.inline(b, 0, cut)}</strong>'
                     + self.inline(b, cut)

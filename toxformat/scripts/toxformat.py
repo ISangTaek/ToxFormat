@@ -13,6 +13,7 @@ import tempfile
 import zipfile
 from pathlib import Path
 
+from reprint_notice import REMINDER
 from editorial import RULES, analyze, fact_candidates, report_text, units
 from manuscript import Block, Run, sha
 from render_article import Renderer
@@ -250,6 +251,7 @@ def execute(args):
         "audit_summary": {
             "score": audit["score"],
             "typos": len(audit["typos"]),
+            "reprint_notice": audit["reprint_notice"],
             "fact_check": args.fact_check,
             "fact_counts": {
                 s: sum(f["status"] == s for f in audit["facts"])
@@ -292,6 +294,7 @@ def execute(args):
         ),
         "body_sha256": manifest["body_sha256"],
         "audit": manifest["audit_summary"],
+        "editor_reminders": [] if audit["reprint_notice"] else [REMINDER],
         "warnings": warnings,
     }
 

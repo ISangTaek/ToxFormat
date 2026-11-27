@@ -7,7 +7,7 @@
 | 主色、标题色、正文色 | 紫墨 `#5D4679`，深墨 `#30263E`，正文 `#353039` |
 | 色纸、分隔线、辅助文字 | `#F5F1F7`，`#D9CDE1`，`#65576C` |
 | 关注条 | 宽 90%，最大 304px，单行排版，上下各 4px 内边距。上下两道细线和一对印刷花叶衬托公众号名称。 |
-| 字体与间距 | 章题用宋体或衬线字体，正文 15px、行高 2。关键词用黑色加粗，关键句用主题紫色（#5D4679）加粗，期刊名称用黑色加粗斜体。每篇推文选约两至三处关键句，三篇速读合刊共用此额度。 |
+| 字体与间距 | 章题用宋体或衬线字体，正文 15px、行高 2。正文关键词用常规字重；仅开头概括整项研究的总述句及后文的主要结果句用主题紫色（#5D4679）加粗。单稿优先两句，三篇合刊合计最多三句。原稿加粗记录在复验清单。期刊名称用黑色加粗斜体。 |
 
 ## 各组件完整 HTML
 
@@ -40,13 +40,13 @@
 ### 正文关键词
 
 ```html
-<p style="margin:0 0 20px;font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;font-size:15px;line-height:2;color:#353039;letter-spacing:0.25px;text-align:left;overflow-wrap:break-word;"><span leaf="">正文中的</span><span style="color:#000000;font-weight:700;"><span leaf="">关键概念</span></span><span leaf="">使用黑色加粗。</span></p>
+<p style="margin:0 0 20px;font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;font-size:15px;line-height:2;color:#353039;letter-spacing:0.25px;text-align:left;overflow-wrap:break-word;"><span leaf="">正文中的</span><span leaf="">关键概念</span><span leaf="">沿用正文常规字重。</span></p>
 ```
 
 ### 原稿加粗
 
 ```html
-<p style="margin:0 0 20px;font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;font-size:15px;line-height:2;color:#353039;letter-spacing:0.25px;text-align:left;overflow-wrap:break-word;"><span leaf="">示例段落包含</span><strong style="color:#000000;font-weight:700;"><span leaf="">原作者加粗的字词</span></strong><span leaf="">以及后续正文。期刊名称如 </span><strong style="color:#000000;font-weight:700;font-style:italic;"><span leaf="">Nature Communications</span></strong><span leaf="">。</span></p><p><strong style="color:#5D4679;font-weight:700;"><span leaf="">此处展示研究的主要结论。</span></strong></p>
+<p style="margin:0 0 20px;font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif;font-size:15px;line-height:2;color:#353039;letter-spacing:0.25px;text-align:left;overflow-wrap:break-word;"><span leaf="">示例段落包含</span><span leaf="">原作者加粗的字词</span><span leaf="">以及后续正文。期刊名称如 </span><strong style="color:#000000;font-weight:700;font-style:italic;"><span leaf="">Nature Communications</span></strong><span leaf="">。</span></p><p><strong style="color:#5D4679;font-weight:700;"><span leaf="">此处展示研究的主要结论。</span></strong></p>
 ```
 
 ### 一级章题

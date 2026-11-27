@@ -17,6 +17,7 @@ import argparse
 import html
 import re
 from pathlib import Path
+from reprint_notice import Paragraphs, REMINDER, has_notice
 from publication_art import artwork, FOOTER, FOLLOW
 import os
 import sys
@@ -38,6 +39,11 @@ def main():
             parser.error("正文需要一个完整的 section 容器。")
         header, footer = artwork(args.column or src.stem)
         content = match[1] + header + (FOLLOW if args.follow else "") + match[2] + footer + match[3]
+    paragraphs = Paragraphs()
+    paragraphs.feed(content)
+    paragraphs.close()
+    if not has_notice(paragraphs.lines + ["".join(paragraphs.parts)]):
+        print(REMINDER)
     body_out = args.body_out or src.with_name(src.stem + "_正文.html")
     body_out.write_text(content, encoding="utf-8")
     print("完整正文：" + str(body_out))

@@ -117,7 +117,8 @@ class WorkflowTest(unittest.TestCase):
             for b in self.manifest["blocks"]
             for s in b["added_emphasis"]
         ]
-        self.assertIn(("置信区间", "置信区间"), spans)
+        self.assertNotIn(("置信区间", "置信区间"), spans)
+        self.assertEqual(len(spans), 3)
         self.assertTrue(all(a == b for a, b in spans))
         self.assertTrue(
             any(

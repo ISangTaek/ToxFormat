@@ -7,6 +7,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
+from reprint_notice import REMINDER, has_notice
 from sections import LABEL, ROOT, urls
 
 RULES = json.loads((ROOT / "assets/editorial-rules.json").read_text(encoding="utf-8"))
@@ -258,6 +259,7 @@ def analyze(article, digest, evidence_path=None, fact_check=False):
     items = units(article)
     evidence, notes = load_evidence(evidence_path, digest)
     facts, incomplete = fact_rows(items, evidence) if fact_check else ([], [])
+    notice = has_notice(b.text for b in article.blocks)
     scores = score_style(items)
     return {
         "rules": RULES["version"],
@@ -267,7 +269,8 @@ def analyze(article, digest, evidence_path=None, fact_check=False):
         "typos": proofread(items, evidence),
         "fact_check": fact_check,
         "facts": facts,
-        "notes": article.issues + notes + incomplete,
+        "reprint_notice": notice,
+        "notes": article.issues + notes + incomplete + ([] if notice else [REMINDER]),
     }
 
 

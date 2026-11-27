@@ -40,33 +40,77 @@ def article_journals(article):
     }
 
 
+OUTCOME = re.compile(r"揭示|识别出|定位出|证实|发现|表明|显示|优于|高于|低于|显著|降低|提高|改善|高度一致|实现了|预测出|排名|伴随")
+STUDY = re.compile(r"本研究|该研究|本项研究|研究团队|研究者|该模型|该方法|本工作|这项研究|研究发现|研究表明|研究显示")
+RESULT_SECTION = re.compile(r"结果|发现|主要贡献")
+DETAIL = re.compile(r"例如|举例|以.{1,15}为例|未来|有望|旨在|此前|既往研究|前人研究")
+
+
 def key_sentences(article):
-    candidates = []
+    leads, results = [], []
     section = ""
+    opening = True
+    paragraphs = 0
+    papers = {b.paper for b in article.blocks if b.paper > 0}
     for order, block in enumerate(article.blocks):
-        if block.role in ("heading", "paper"):
-            section = block.text
-        if block.role not in ("field", "body", "list") or section.startswith("参考文献"):
+        if block.role == "paper":
+            section, paragraphs, opening = "", 0, True
+        elif block.role in ("heading", "subheading"):
+            if block.role == "heading" or RESULT_SECTION.search(block.text):
+                section = block.text
+            if not re.search(r"引言|导语|背景|摘要|概览", block.text) or re.search(r"方法|结果", block.text):
+                opening = False
+        if block.role not in ("field", "body", "note", "list") or not block.paper and block.role != "note":
             continue
-        label = LABEL.match(block.text.lstrip())
-        finding = re.search(r"结果|结论|总结|主要发现", label[1] if label else section)
+        stripped = block.text.lstrip()
+        label = LABEL.match(stripped)
+        context = label[1] if label else section
+        result_section = bool(RESULT_SECTION.search(context))
+        if label and re.search(r"方法|结果|结论", context):
+            opening = False
+        if re.search(r"方法|参考文献|展望", context) or (label and not result_section and not opening):
+            continue
+        paragraphs += 1
         for start, text in sentences(block.text):
-            if label and start == len(block.text) - len(block.text.lstrip()):
+            if label and start == len(block.text) - len(stripped):
                 start += label.end()
-                text = block.text[start:start + len(text) - label.end()]
-            signal = re.search(r"(?:研究|结果|分析|数据)(?:表明|显示|发现)|显著(?:提高|降低|增加|减少)|优于", text)
-            if not (finding or signal) or len(text.strip()) < 6 or "http" in text:
+                text = text[label.end():]
+            if not 6 <= len(text) <= 240 or "http" in text or DETAIL.search(text) or text.endswith(("?", "？")):
                 continue
-            rank = (0 if signal else 1, 0 if finding else 1, order, start)
-            candidates.append((rank, block, start, start + len(text)))
+            span = (block.id, start, start + len(text), block.paper)
+            outcome = OUTCOME.search(text)
+            if opening and paragraphs <= 3 and not result_section:
+                if STUDY.search(text) and outcome and not re.search(r"发表了.{0,6}论文|发表于", text):
+                    breadth = bool(re.search(r"同时|并|整体|首次|不仅|从而|为.{1,20}提供", text))
+                    leads.append(((not breadth, order, start), span))
+            measured = bool(re.search(r"\d", text))
+            if not outcome and not (result_section and measured):
+                continue
+            if not result_section and not (outcome and (STUDY.search(text) or re.search(r"结果表明|结果显示|验证中|验证结果", text))):
+                continue
+            if re.search(r"进行了|用于|为测试|为验证|为评估", text) and not outcome:
+                continue
+            rank = (not result_section, not bool(outcome), not measured, order, start)
+            results.append((rank, span))
+    chosen = []
+    lead_position = (-1, -1)
+    if leads:
+        lead_rank, lead_span = min(leads)
+        chosen.append(lead_span)
+        lead_position = lead_rank[-2:]
+    ranked = [span for rank, span in sorted(results) if rank[-2:] > lead_position]
+    # Cover distinct papers first, then distinct paragraphs within the same paper.
+    limit = 3 if len(papers) >= 3 else 2
+    for distinct in ("paper", "block", "sentence"):
+        for span in ranked:
+            if len(chosen) >= limit:
+                break
+            if span in chosen or (distinct == "paper" and any(c[3] == span[3] for c in chosen)):
+                continue
+            if distinct == "block" and any(c[0] == span[0] for c in chosen):
+                continue
+            chosen.append(span)
     selected = {}
-    papers = set()
-    for spread in (True, False):
-        for _, block, start, end in sorted(candidates, key=lambda c: c[0]):
-            if block.id in selected or (spread and block.paper in papers):
-                continue
-            selected[block.id] = (start, end)
-            papers.add(block.paper)
-            if len(selected) == 3:
-                return selected
+    for block_id, start, end, _ in chosen:
+        selected.setdefault(block_id, []).append((start, end))
     return selected
