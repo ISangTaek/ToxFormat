@@ -89,7 +89,7 @@ def select_spans(block, column):
 
 
 class Renderer:
-    def __init__(self, article, column, theme_id, image_map=None):
+    def __init__(self, article, column, theme_id, image_map=None, sentence_emphasis="source"):
         self.article = article
         self.column = CATALOG["columns"][column]
         self.theme = CATALOG["themes"][theme_id]
@@ -103,7 +103,7 @@ class Renderer:
         self.spans = {b.id: [] if self.violet else select_spans(b, self.column) for b in article.walk()}
         self.special = {}
         if self.violet:
-            findings = key_sentences(article)
+            findings = key_sentences(article, sentence_emphasis)
             journals = article_journals(article)
             for block in article.walk():
                 spans = [(a, z, "journal") for a, z in journals.get(block.id, ())]
@@ -353,6 +353,8 @@ class Renderer:
 
         header, footer = artwork(self.column['prefixes'][0], self.image_map)
         bs = self.article.blocks
+        if header and bs and bs[0].role == "divider":
+            bs = bs[1:]
         pieces = [header] if header else []
         if follow:
             invitation = self.part("刊首关注") or FOLLOW

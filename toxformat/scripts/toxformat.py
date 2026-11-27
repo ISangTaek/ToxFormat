@@ -237,7 +237,7 @@ def execute(args):
     if args.command != "format":
         raise ValueError("无法识别命令")
     mapping = image_mapping(args.image_map)
-    renderer = Renderer(article, col, theme_id, mapping)
+    renderer = Renderer(article, col, theme_id, mapping, sentence_emphasis=args.sentence_emphasis)
     body = renderer.render(follow=args.follow)
     errors, warnings, leaf_count = validate(body)
     if errors:
@@ -332,6 +332,8 @@ def main():
             cmd.add_argument("--save", help="将完整 JSON 保存到文件")
         if name == "format":
             cmd.add_argument("--theme-image", action="store_true", help="返回内置主题图流程和本次稿件，供宿主生成图片")
+            cmd.add_argument("--sentence-emphasis", choices=("source", "auto", "none"), default="source",
+                             help="紫罗兰关键句：沿用原稿、按编辑要求自动选句或关闭")
             cmd.add_argument("--follow", action="store_true", help="按编辑要求加入刊首关注提示")
             cmd.add_argument("--out", default="ToxFormat输出")
             cmd.add_argument("--image-map", help="可选的图片 SHA-256 到已上传素材 HTTPS 地址的 JSON")

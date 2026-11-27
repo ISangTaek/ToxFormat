@@ -46,7 +46,39 @@ RESULT_SECTION = re.compile(r"结果|发现|主要贡献")
 DETAIL = re.compile(r"例如|举例|以.{1,15}为例|未来|有望|旨在|此前|既往研究|前人研究")
 
 
-def key_sentences(article):
+def source_bold_sentences(article):
+    """Use only whole sentences marked bold by the author, in publication order."""
+    selected = {}
+    count = 0
+    for block in article.blocks:
+        if block.role not in ("body", "field", "list", "note"):
+            continue
+        # Word can split a single sentence into runs for fonts, links and revisions.
+        bold = [bool(dict(run.marks).get("bold")) for run in block.runs for _ in run.text]
+        label = LABEL.match(block.text.lstrip())
+        for start, sentence in sentences(block.text):
+            end = start + len(sentence)
+            if label and start == len(block.text) - len(block.text.lstrip()):
+                start += label.end()
+            words = [i for i in range(start, end) if block.text[i].isalnum()]
+            if not words or not all(bold[i] for i in words):
+                continue
+            if not re.search(r"""[。！？.!?][”」』’"']*$""", sentence):
+                continue
+            selected.setdefault(block.id, []).append((start, end))
+            count += 1
+            if count == 3:
+                return selected
+    return selected
+
+
+def key_sentences(article, mode="source"):
+    if mode == "source":
+        return source_bold_sentences(article)
+    if mode == "none":
+        return {}
+    if mode != "auto":
+        raise ValueError("未知的关键句模式：" + mode)
     leads, results = [], []
     section = ""
     opening = True

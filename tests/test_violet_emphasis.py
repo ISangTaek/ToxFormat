@@ -21,7 +21,7 @@ class VioletTest(unittest.TestCase):
             b.id = str(i)
         for col, theme in (("文献解析", "violet-folio"), ("文献速读", "violet-digest")):
             with self.subTest(theme=theme):
-                r = Renderer(Article(blocks, {}, []), col, theme)
+                r = Renderer(Article(blocks, {}, []), col, theme, sentence_emphasis="auto")
                 journal = r.inline(blocks[0])
                 self.assertEqual(journal.count("color:#000000;font-style:italic;"), 2)
                 self.assertIn("</strong><span leaf=\"\">（IF：18.1）", journal)
@@ -42,7 +42,17 @@ class VioletTest(unittest.TestCase):
             Block("end", [Run("结论")], role="heading"),
             Block("recap", [Run("本研究表明新模型可以提高预测精度。")]),
         ]
-        self.assertEqual(set(key_sentences(Article(blocks, {}, []))), {"lead", "main"})
+        self.assertEqual(set(key_sentences(Article(blocks, {}, []), "auto")), {"lead", "main"})
+
+    def test_only_source_bold_sentences_by_default(self):
+        from violet_emphasis import key_sentences
+        bold = (("bold", True),)
+        block = Block("b", [Run("结果："), Run("第一组", bold), Run("表现更好", bold),
+                            Run("。第二组"), Run("均值", bold), Run("更低。")], role="field")
+        article = Article([block], {}, [])
+        spans = key_sentences(article)["b"]
+        self.assertEqual([block.text[a:z] for a, z in spans], ["第一组表现更好。"])
+        self.assertEqual(key_sentences(article, "none"), {})
 
     def test_reprint_notice_must_contain_terms_at_the_end(self):
         from reprint_notice import has_notice

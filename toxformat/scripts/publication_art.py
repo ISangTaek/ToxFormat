@@ -32,7 +32,15 @@ def artwork(column="", mapping=None):
     headers = {p.name[:-len("_栏目头图.png")]: p.name for p in directory.glob("*_栏目头图.png")}
     if name in ("论文解析", "论文速读", "政策法规追踪", "行业动态解读", "科普文化传播") and name not in headers:
         raise ValueError(f"缺少栏目头图：{name}_栏目头图.png")
-    return image(headers[name]) if name in headers else "", image(FOOTER)
+    header = ""
+    if name in headers:
+        # One front component keeps preview note placement and image indices stable.
+        header = (
+            "<section>" + image(headers[name])
+            + '<p style="margin:0;border-top:1px solid #D4D4D8;font-size:15px;line-height:1.8;">'
+            + '<span leaf=""><br></span></p></section>'
+        )
+    return header, image(FOOTER)
 
 
 def last_body_image(rows):

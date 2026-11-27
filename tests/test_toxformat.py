@@ -98,6 +98,9 @@ class WorkflowTest(unittest.TestCase):
         self.assertNotIn("本文看点", self.html.text)
         self.assertNotIn("编者按", self.html.text)
         self.assertEqual(self.html.text.count("点击上方"), 0)
+        header_end = self.body.index("</p></section>", self.body.index('alt="论文速读_栏目头图"'))
+        self.assertIn('border-top:1px solid #D4D4D8', self.body[:header_end])
+        self.assertTrue(self.body[:header_end].endswith('<span leaf=""><br></span>'))
         art = ROOT / "栏目头图与尾图"
         self.assertEqual(b64decode(self.html.image_sources[0].split(",")[1]), (art / "论文速读_栏目头图.png").read_bytes())
         self.assertEqual(b64decode(self.html.image_sources[-1].split(",")[1]), (art / "未毒先知_公众号尾图.png").read_bytes())
@@ -118,7 +121,7 @@ class WorkflowTest(unittest.TestCase):
             for s in b["added_emphasis"]
         ]
         self.assertNotIn(("置信区间", "置信区间"), spans)
-        self.assertEqual(len(spans), 3)
+        self.assertEqual(spans, [])
         self.assertTrue(all(a == b for a, b in spans))
         self.assertTrue(
             any(
