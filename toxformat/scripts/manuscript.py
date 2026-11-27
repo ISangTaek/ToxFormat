@@ -4,17 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import mimetypes
-import os
 import posixpath
 import re
-import shutil
-import stat
-import subprocess
-import tempfile
-import time
 import zipfile
 from dataclasses import dataclass, field
-from pathlib import Path
 from urllib.parse import unquote
 from xml.etree import ElementTree as ET
 
@@ -107,104 +100,9 @@ def safe_link(url):
     return url if re.match(r"^(?:https?://|mailto:|#)", url, re.IGNORECASE) else ""
 
 
-def office_setting():
-    return Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "toxformat/soffice.txt"
-
-
-def find_office(executable=None):
-    try:
-        configured = office_setting().read_text(encoding="utf-8").strip()
-    except (OSError, UnicodeError):
-        configured = ""
-    options = (
-        [executable]
-        if executable
-        else [
-            os.environ.get("TOXFORMAT_SOFFICE"),
-            configured,
-            shutil.which("soffice"),
-            shutil.which("libreoffice"),
-            Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "LibreOffice/program/soffice.com",
-            Path(os.environ.get("ProgramFiles", "C:/Program Files")) / "LibreOffice/program/soffice.exe",
-            Path("/Applications/LibreOffice.app/Contents/MacOS/soffice"),
-        ]
-    )
-    for opt in options:
-        if opt and Path(opt).is_file():
-            return str(Path(opt).resolve())
-    raise ValueError("处理 .doc 需要 LibreOffice。请安装后重试，或用 --soffice 指定程序路径。")
-
-
-def office_version(exe):
-    result = subprocess.run(
-        [exe, "--headless", "--version"], capture_output=True, timeout=30, check=False
-    )
-    return result.stdout.decode("utf-8", "replace").strip()
-
-
-def convert_doc(source, folder, exe):
-    profile = (folder / "profile").resolve().as_uri()
-    cmd = [
-        exe,
-        "-env:UserInstallation=" + profile,
-        "--headless",
-        "--norestore",
-        "--convert-to",
-        "docx:Office Open XML Text",
-        "--outdir",
-        str(folder),
-        str(source.resolve()),
-    ]
-    result = subprocess.run(cmd, capture_output=True, timeout=150, check=False)
-    target = folder / (source.stem + ".docx")
-    if result.returncode or not target.is_file() or not zipfile.is_zipfile(target):
-        detail = (result.stderr or result.stdout).decode("utf-8", "replace").strip()
-        raise ValueError(f"LibreOffice 转换失败：{detail}")
-    return target
-
-
-def read_word(source, soffice=None):
-    if source.suffix.lower() == ".doc":
-        exe = find_office(soffice)
-        temp_root = Path(os.environ.get("TOXFORMAT_TMPDIR") or tempfile.gettempdir()).resolve()
-        folder = Path(tempfile.mkdtemp(prefix="tf-", dir=temp_root)).resolve()
-        article = None
-        try:
-            local_copy = folder / "submission.doc"
-            shutil.copyfile(source, local_copy)
-            article = read_word(convert_doc(local_copy, folder, exe))
-        finally:
-            # An isolated Office profile contains deep paths and can briefly hold
-            # a Windows file handle after the converter process exits.
-            if folder.parent != temp_root:
-                raise ValueError("临时转换目录超出预期位置。")
-            cleanup = (
-                "\\\\?\\" + str(folder)
-                if os.name == "nt" and folder.drive and not str(folder).startswith("\\\\")
-                else str(folder)
-            )
-            for attempt in range(4):
-                try:
-                    shutil.rmtree(cleanup, onerror=remove_readonly)
-                    break
-                except OSError:
-                    if attempt < 3:
-                        time.sleep(0.25 * (attempt + 1))
-                    elif article is not None:
-                        article.issues.append("转换已完成；临时配置目录仍被占用：" + str(folder))
-        article.converter = office_version(exe)
-        return article
+def read_word(source):
     with zipfile.ZipFile(source) as archive:
         return WordReader(archive).read()
-
-
-def remove_readonly(function, path, error):
-    # LibreOffice can mark its temporary .~lock files read-only on Windows.
-    if isinstance(error[1], PermissionError) and function in (os.remove, os.unlink, os.rmdir):
-        os.chmod(path, stat.S_IREAD | stat.S_IWRITE)
-        function(path)
-    else:
-        raise error[1]
 
 
 class WordReader:

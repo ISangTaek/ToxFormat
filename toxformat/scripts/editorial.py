@@ -254,10 +254,10 @@ def fact_rows(items, evidence):
     return result, notes
 
 
-def analyze(article, digest, evidence_path=None):
+def analyze(article, digest, evidence_path=None, fact_check=False):
     items = units(article)
     evidence, notes = load_evidence(evidence_path, digest)
-    facts, incomplete = fact_rows(items, evidence)
+    facts, incomplete = fact_rows(items, evidence) if fact_check else ([], [])
     scores = score_style(items)
     return {
         "rules": RULES["version"],
@@ -265,6 +265,7 @@ def analyze(article, digest, evidence_path=None):
         "scores": scores,
         "score": max((p["score"] for p in scores if p["score"] is not None), default=None),
         "typos": proofread(items, evidence),
+        "fact_check": fact_check,
         "facts": facts,
         "notes": article.issues + notes + incomplete,
     }
@@ -307,25 +308,26 @@ def report_text(article, audit, theme, sources):
         )
     if not audit["typos"]:
         lines.append("本次检查未标出疑似错字。")
-    lines += ["", "## 原始文献事实核查", ""]
-    counts = {
-        k: sum(f["status"] == k for f in audit["facts"])
-        for k in ("一致", "不一致", "待核", "无可核事实")
-    }
-    lines.append("　".join(f"{k} {v} 项" for k, v in counts.items()))
-    lines += ["", "| 篇次与位置 | 稿件所述 | 结论 | 原文依据与位置 |", "| --- | --- | --- | --- |"]
-    for row in audit["facts"]:
-        evidence = " ".join(row[k] for k in ("evidence", "locator", "source") if row[k])
-        lines.append(
-            "| "
-            + " | ".join(
-                map(
-                    esc,
-                    [f"{row['paper'] or '合刊'} / {row['id']}", row["claim"], row["status"], evidence],
+    if audit["fact_check"]:
+        lines += ["", "## 原始文献事实核查", ""]
+        counts = {
+            k: sum(f["status"] == k for f in audit["facts"])
+            for k in ("一致", "不一致", "待核", "无可核事实")
+        }
+        lines.append("　".join(f"{k} {v} 项" for k, v in counts.items()))
+        lines += ["", "| 篇次与位置 | 稿件所述 | 结论 | 原文依据与位置 |", "| --- | --- | --- | --- |"]
+        for row in audit["facts"]:
+            evidence = " ".join(row[k] for k in ("evidence", "locator", "source") if row[k])
+            lines.append(
+                "| "
+                + " | ".join(
+                    map(
+                        esc,
+                        [f"{row['paper'] or '合刊'} / {row['id']}", row["claim"], row["status"], evidence],
+                    )
                 )
+                + " |"
             )
-            + " |"
-        )
     if audit["notes"]:
         lines += ["", "## 材料说明", "", *("- " + n for n in audit["notes"])]
     return "\n".join(lines) + "\n"

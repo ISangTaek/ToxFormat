@@ -12,19 +12,19 @@
 | 2 | [A 图书馆照度记录](fixtures/文献速读-20261122-A图书馆照度记录.docx)　`fd7cfc3874ad1e3a158983923f74f4b92997a8bda237cfb05fe4593df0a2d6a4` | 署名陈二，正文写 42 次，原文表 1 为 24 次，图 1 和二维码 A |
 | 3 | [M 步道客流计数](fixtures/文献速读-20261123-M步道客流计数.docx)　`b74cb864c6e0b655724cef24d4ed2ae52fd82dc1248be37afa8f691597288bce` | 署名吴三，三个时段 12、17、20 人次，图 1 和二维码 M |
 
-本机使用包、主题、规则版本 1.0.0，三篇的 AI 感分数依次为 **0、55、0**。第二篇触发大修参考线，含“数椐”及对话残留，第三篇原始资料暂缺。三项报告发出后仍在同次交付中给出原稿排版。独立校对员可重新核对事实，也可用[随包的参考核查记录](模拟合刊核查.json)固定证据、单独复验渲染。
+本机使用包、主题、规则版本 1.0.0，三篇的 AI 感分数依次为 **0、55、0**。第二篇触发大修参考线，含“数椐”及对话残留，第三篇原始资料暂缺。默认报告只含 AI 感和错别字检查，交付排版后应询问是否进行事实核查。回复确认后再核对原始资料。独立校对员可重新核对事实，也可用[随包的参考核查记录](模拟合刊核查.json)固定证据、单独复验渲染。
 
 - 合并后的输入校验值为 `55e1ebe9a7787f65def77dafa919c2a0a3ccf8beef34c094b7eb4ed4d696f319`。
 - 三份 DOCX 的正文 SHA-256 为 **`b1d20fc432897f14ef2102c5046e4efd65f33a50962adcc5b9907d77ee46de8f`**。预览中六张图片的顺序为各篇的研究图、二维码。各篇的「原始读数」保留原稿加粗，第 1 篇 `d1.p6` 在字符区间 `[9,13)`、`[17,21)` 补充强调「暴露水平」「置信区间」。原稿的三个“图1”都应保留。
 - 将主题改为旧名「论文速读-紫罗兰」，正文和强调区间应相同。改为「石墨极简风」，应切换主题并保持篇序。交换两个附件的位置，正文、逐篇核查记录和校验值都应随之对应。
-- 旧版 Word 的用例把第一篇替换为[二进制 DOC](legacy/文献速读-20261121-Z城市树荫温度观测.doc)。文件 SHA-256 为 `03c2b44f536f6e2a6b6a6d3a1972d7f4317bd1074422e5b556ed283085614e18`。LibreOffice 26.8.3.1 的同版本本机复跑生成正文 `4b8e2b147729192e22ba04e7436f4f830b6c34849b8941b17a5643cb78117cd3`。对照本条二进制基准即可。
+- 第一篇换成旧版二进制 DOC 时，程序应提示另存为 DOCX。
 - 要验证询问栏目，将第一份 Word 的**副本**改名为 `来稿.docx`，单独提交，输入相同提示词。Agent 应询问是文献解析还是文献速读。
 
 在 Windows、macOS 或 Linux 的项目根目录也可直接复验三文件的本地命令。两条命令中的文件顺序相同。
 
 ```sh
-python -X utf8 toxformat/scripts/toxformat.py report "tests/fixtures/文献速读-20261121-Z城市树荫温度观测.docx" "tests/fixtures/文献速读-20261122-A图书馆照度记录.docx" "tests/fixtures/文献速读-20261123-M步道客流计数.docx" --evidence "tests/模拟合刊核查.json" --save 稿前报告.md
-python -X utf8 toxformat/scripts/toxformat.py format "tests/fixtures/文献速读-20261121-Z城市树荫温度观测.docx" "tests/fixtures/文献速读-20261122-A图书馆照度记录.docx" "tests/fixtures/文献速读-20261123-M步道客流计数.docx" --evidence "tests/模拟合刊核查.json" --out 复验输出
+python -X utf8 toxformat/scripts/toxformat.py report "tests/fixtures/文献速读-20261121-Z城市树荫温度观测.docx" "tests/fixtures/文献速读-20261122-A图书馆照度记录.docx" "tests/fixtures/文献速读-20261123-M步道客流计数.docx" --fact-check --evidence "tests/模拟合刊核查.json" --save 稿前报告.md
+python -X utf8 toxformat/scripts/toxformat.py format "tests/fixtures/文献速读-20261121-Z城市树荫温度观测.docx" "tests/fixtures/文献速读-20261122-A图书馆照度记录.docx" "tests/fixtures/文献速读-20261123-M步道客流计数.docx" --fact-check --evidence "tests/模拟合刊核查.json" --out 复验输出
 ```
 
 本机用 390 像素宽的 Chrome 预览加载了全部图片；复制事件同时提供 `text/html` 与 `text/plain`。标题、工具栏与参考报告均在正文复制区域之外。实际微信后台粘贴及另一台电脑的宿主复验由编辑执行。

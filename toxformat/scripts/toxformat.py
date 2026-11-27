@@ -169,7 +169,7 @@ def execute(args):
             },
         }
     article, col, theme_id, digest, inputs = load_submission(
-        args.files, args.column, args.theme, args.title, args.soffice, args.mode
+        args.files, args.column, args.theme, args.title, args.mode
     )
     if args.note:
         article.blocks.insert(
@@ -191,7 +191,7 @@ def execute(args):
     }
     if args.command == "inspect":
         items = units(article)
-        facts = fact_candidates(items)
+        facts = fact_candidates(items) if args.fact_check else []
         media_files = {}
         if args.media_dir:
             folder = Path(args.media_dir).resolve()
@@ -222,7 +222,7 @@ def execute(args):
                 if r.image
             ],
         }
-    audit = analyze(article, digest, args.evidence)
+    audit = analyze(article, digest, args.evidence, fact_check=args.fact_check)
     report = report_text(article, audit, theme["name"], inputs)
     if args.command == "report":
         if args.save:
@@ -245,10 +245,11 @@ def execute(args):
         "audit_summary": {
             "score": audit["score"],
             "typos": len(audit["typos"]),
+            "fact_check": args.fact_check,
             "fact_counts": {
                 s: sum(f["status"] == s for f in audit["facts"])
                 for s in ("一致", "不一致", "待核", "无可核事实")
-            },
+            } if args.fact_check else None,
         },
         "html_validation": {"errors": errors, "warnings": warnings, "leaf_spans": leaf_count},
     }
@@ -273,6 +274,7 @@ def execute(args):
         "output": str(target),
         "report": str(target / "审稿参考.md"),
         "preview": str(target / "预览.html"),
+        "follow_up": None if args.fact_check else "是否要对照原始文献进行事实核查？",
         "body_sha256": manifest["body_sha256"],
         "audit": manifest["audit_summary"],
         "warnings": warnings,
@@ -290,7 +292,7 @@ def main():
         cmd.add_argument("--theme")
         cmd.add_argument("--title", help="微信标题或合刊标题")
         cmd.add_argument("--note", help="编辑明确指定的按语")
-        cmd.add_argument("--soffice", help="LibreOffice 可执行文件")
+        cmd.add_argument("--fact-check", action="store_true", help="编辑明确要求时启用原始文献事实核查")
         modes = cmd.add_mutually_exclusive_group()
         modes.add_argument(
             "--draft", dest="mode", action="store_const", const="draft", help="试排一至多篇速读"

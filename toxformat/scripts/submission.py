@@ -18,9 +18,9 @@ from sections import (
 )
 
 
-def read_one(path, column, soffice):
-    if path.suffix.lower() in {".doc", ".docx"}:
-        raw = read_word(path, soffice)
+def read_one(path, column):
+    if path.suffix.lower() == ".docx":
+        raw = read_word(path)
     elif path.suffix.lower() in {".md", ".markdown", ".txt"}:
         raw = read_markup(path)
     else:
@@ -128,11 +128,13 @@ def merge_digest(articles, title):
 
 
 def load_submission(
-    paths, selected_column=None, selected_theme=None, title=None, soffice=None, mode="issue"
+    paths, selected_column=None, selected_theme=None, title=None, mode="issue"
 ):
     files = [Path(p).resolve() for p in paths]
     if not files:
         raise ValueError("请选择稿件。")
+    if any(path.suffix.lower() == ".doc" for path in files):
+        raise ValueError("请将旧版 .doc 稿件另存为 .docx 后提交。")
     columns = [resolve_column(path.stem, selected_column) for path in files]
     column = columns[0]
     digest_column = CATALOG["columns"][column]["structure"] == "digest"
@@ -147,7 +149,7 @@ def load_submission(
     if (
         digest_column
         and mode == "issue"
-        and any(p.suffix.lower() not in {".doc", ".docx"} for p in files)
+        and any(p.suffix.lower() != ".docx" for p in files)
     ):
         raise SelectionError(
             "文献速读正式合刊需要三个篇位对应的原始 Word。其他格式可使用 --draft 预览。"
@@ -162,7 +164,7 @@ def load_submission(
         if checksum in hashes:
             raise SelectionError("重复提交了同一份稿件。请按篇位提供内容不同的文件。")
         hashes.add(checksum)
-        doc = read_one(path, column, soffice)
+        doc = read_one(path, column)
         inputs.append(
             {
                 "slot": slot,

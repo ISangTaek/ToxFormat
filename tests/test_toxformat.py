@@ -163,7 +163,7 @@ class WorkflowTest(unittest.TestCase):
         }
         path = self.work / "evidence.json"
         path.write_text(json.dumps(evidence, ensure_ascii=False), encoding="utf-8")
-        output = self.command("format", *FILES, "--out", self.work / "review", "--evidence", path)
+        output = self.command("format", *FILES, "--out", self.work / "review", "--fact-check", "--evidence", path)
         out = Path(output["output"])
         report = (out / "审稿参考.md").read_text(encoding="utf-8")
         for value in ("建议大修", "数椐", "模拟原文-A.md", "24 次", "待核"):
@@ -172,7 +172,7 @@ class WorkflowTest(unittest.TestCase):
         self.assertIn("42 次", self.html.text)
         self.assertIn("数椐", self.html.text)
         self.assertNotIn("稿前参考报告", self.body)
-        swapped = self.command("report", FILES[1], FILES[0], FILES[2], "--evidence", path)
+        swapped = self.command("report", FILES[1], FILES[0], FILES[2], "--fact-check", "--evidence", path)
         self.assertIn("校验值不匹配", swapped["report"])
         self.assertNotIn("模拟原文-A.md", swapped["report"])
 
@@ -206,32 +206,23 @@ class WorkflowTest(unittest.TestCase):
                 self.assertNotIn("{{", body)
                 self.assertEqual(len(html.image_sources), 6)
 
-    def test_converter_on_genuine_binary_doc(self):
-        sys.path.insert(0, str(CLI.parent))
-        from manuscript import find_office
+    def test_default_review_and_follow_up(self):
+        report = (self.out / "审稿参考.md").read_text(encoding="utf-8")
+        self.assertIn("AI 感预警", report)
+        self.assertIn("错别字", report)
+        self.assertNotIn("原始文献事实核查", report)
+        self.assertIn("是否", self.response["follow_up"])
+        self.assertIsNone(self.response["audit"]["fact_counts"])
+        self.assertEqual(self.command("inspect", *FILES)["fact_ids"], [])
+        self.assertTrue(self.command("inspect", *FILES, "--fact-check")["fact_ids"])
+        audit = self.command("report", *FILES, "--evidence", ROOT / "tests/模拟合刊核查.json")["audit"]
+        self.assertEqual(audit["facts"], [])
 
-        try:
-            office = find_office()
-        except ValueError:
-            self.skipTest("本机未安装 LibreOffice，可设置 TOXFORMAT_SOFFICE 重跑")
+    def test_reject_binary_doc(self):
         binary = next((ROOT / "tests/legacy").glob("*.doc"))
-        self.assertEqual(binary.read_bytes()[:8], bytes.fromhex("D0CF11E0A1B11AE1"))
-        data = self.command(
-            "format", binary, *FILES[1:], "--soffice", office, "--out", self.work / "legacy"
+        proc = subprocess.run(
+            [sys.executable, str(CLI), "format", str(binary), *map(str, FILES[1:])],
+            capture_output=True, encoding="utf-8", cwd=self.work,
         )
-        self.assertIn("LibreOffice", data["converter"])
-        output = Path(data["output"])
-        manifest = json.loads((output / "复验清单.json").read_text(encoding="utf-8"))
-        legacy_body = ArticleHTML((output / "正文.html").read_text(encoding="utf-8"))
-        self.assertEqual(legacy_body.targets, self.html.targets)
-        self.assertEqual(legacy_body.image_sources, self.html.image_sources)
-        self.assertEqual([b["text"] for b in manifest["blocks"] if b["role"] == "paper"], TITLES)
-        self.assertTrue(
-            any(
-                b["text"][s["start"] : s["end"]] == "原始读数"
-                for b in manifest["blocks"]
-                if b["paper"] == 1
-                for s in b["word_marks"]
-                if s["marks"].get("bold")
-            )
-        )
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("另存为 .docx", json.loads(proc.stderr)["message"])

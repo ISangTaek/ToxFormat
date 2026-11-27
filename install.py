@@ -109,22 +109,9 @@ def main():
     )
     host.add_argument("--skills-dir", type=Path, help="宿主实际使用的技能目录")
     parser.add_argument("--migrate", action="store_true", help="可恢复地迁移同一目录中的 gzh-design")
-    parser.add_argument("--soffice", type=Path, help="为本机各宿主登记 LibreOffice 的可执行文件")
     args = parser.parse_args()
     try:
-        if args.soffice and not args.soffice.is_file():
-            raise ValueError("指定的 LibreOffice 程序不存在。")
         path, backup = install(args.skills_dir or host_dir(args.host), args.migrate)
-        if args.soffice:
-            sys.path.insert(0, str(SOURCE / "scripts"))
-            from manuscript import office_setting
-
-            location = office_setting()
-            location.parent.mkdir(parents=True, exist_ok=True)
-            with tempfile.NamedTemporaryFile(dir=location.parent, delete=False) as tmp:
-                tmp.write((str(args.soffice.resolve()) + "\n").encode("utf-8"))
-            Path(tmp.name).replace(location)
-            print("本机 Word 转换器　" + str(args.soffice.resolve()))
     except (OSError, ValueError) as exc:
         parser.exit(1, str(exc) + "\n")
     print("已安装　" + str(path))
