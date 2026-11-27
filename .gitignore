@@ -1,0 +1,11 @@
+/.work/
+/.tools/
+.ruff_cache/
+/验收输出/
+/学术投稿主题预览/
+/论文解析推文示例-*
+/dist/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store

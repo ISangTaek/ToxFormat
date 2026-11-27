@@ -1,0 +1,6 @@
+interface:
+  display_name: "ToxFormat"
+  short_description: "微信公众号文献解析与三篇速读的稿前检查、排版和富文本复制"
+  default_prompt: "使用 $toxformat 对这份文档进行公众号排版。"
+policy:
+  allow_implicit_invocation: true

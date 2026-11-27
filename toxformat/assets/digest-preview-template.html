@@ -1,0 +1,132 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>{{TITLE}} · {{THEME}}</title><style>
+*{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0;color:#2a2428;background:#f4f2ef;font-family:'Instrument Sans','Microsoft YaHei','PingFang SC',sans-serif}
+button,input,textarea{font:inherit}
+a{color:inherit}
+button,a:focus-visible,summary{touch-action:manipulation}
+button{cursor:pointer}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #7b3752;outline-offset:3px}
+[hidden]{display:none!important}
+
+.bar{position:sticky;z-index:2;top:0;background:#fbfaf8;border-bottom:1px solid #d8d4d0}
+.bar-inner{max-width:1000px;padding:10px 16px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.links,.actions{display:flex;align-items:center;gap:12px}
+.links a,.links b{font-size:13px}.links a{color:#655c60;text-decoration:none}
+.links b{font-weight:650;padding-left:11px;border-left:1px solid #c9c4c7}
+.bar button,.panel button{border:1px solid #cfcacf;background:#fff;color:#322d31;padding:8px 12px;border-radius:4px;font-size:13px}
+.bar .copy,.panel .apply{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:650}
+.paper{max-width:713px;margin:26px auto 60px;padding:0 17px 12px;background:#fff;border:1px solid #e2dfda}
+.meta{padding:27px 15px 18px}
+.meta h1{font:650 clamp(21px,4.5vw,28px)/1.5 'Noto Serif SC','Songti SC','Microsoft YaHei',serif;margin:0 0 8px;color:#241e23}
+.meta p{font-size:13px;color:#6c626a;line-height:1.6;margin:0}.meta b{color:var(--accent);font-weight:600}
+.panel{border:1px solid #d6d1d2;border-radius:5px;width:min(530px,calc(100% - 24px));max-height:90vh;color:#2e272c;padding:22px}
+.panel::backdrop{background:rgba(35,30,34,.37)}
+.panel h2{font:600 21px/1.6 'Noto Serif SC','Songti SC',serif;margin:0 0 12px}
+.panel label,.panel h3{display:block;font-size:13px;font-weight:650;margin:16px 0 5px}
+.panel textarea{width:100%;min-height:85px;resize:vertical;border:1px solid #c9c3c7;padding:8px;font-size:14px;line-height:1.7}
+.panel p{font-size:13px;line-height:1.7;margin:5px 0 10px}
+.panel nav{display:flex;flex-wrap:wrap;gap:8px 15px;font-size:13px;line-height:1.9}
+.panel footer{display:flex;justify-content:flex-end;gap:8px;margin-top:22px}
+#gzhToast{position:fixed;z-index:5;left:50%;bottom:24px;transform:translateX(-50%);color:#fff;background:#2e2930;padding:10px 16px;border-radius:4px;font-size:13px;pointer-events:none;opacity:0;text-align:center}
+#gzhToast.show{opacity:1}
+@media(max-width:600px){.paper{margin:0 auto 28px;padding:0 2px 8px;border:0}.bar-inner{padding:8px;gap:5px}.links,.actions{gap:6px}.links b{padding-left:7px}.bar button{padding:7px 8px}.meta{padding:21px 14px 14px}}
+</style></head>
+    <body style="--accent:#5D4679" data-filename="{{FILENAME}}" data-first-note="{{HAS_NOTE}}">
+    <header class="bar"><nav class="bar-inner"><div class="links"><span style="font-size:12px;color:#65576C;">主题预览</span><b>{{THEME}}</b></div>
+    <div class="actions"><button id="manage" type="button">稿件设置</button><button class="copy" id="gzhCopyBtn" type="button" onclick="gzhCopy()">复制到公众号</button></div></nav></header>
+    <main class="paper"><header class="meta"><h1>{{TITLE}}</h1><p>{{BYLINE}}<b>{{ACCOUNT}}</b></p></header>
+    <div id="gzh-content">{{BODY}}</div></main><div id="gzhToast" role="status"></div>
+    <dialog class="panel" aria-labelledby="settingsHeading"><h2 id="settingsHeading">稿件设置</h2>
+    <p>{{TITLE}}</p><nav><button type="button" id="titleCopy">复制标题</button>
+    <button type="button" id="saveBody">下载当前正文 HTML</button></nav>
+    <label for="noteInput">编者按（选填）</label><textarea id="noteInput"></textarea>
+    <p>填写后，按语显示在关注提示与第一则论文之间。清空后再应用即可移除。</p>
+    {{DOWNLOADS}}
+    <footer><button type="button" id="cancel">关闭</button><button type="button" id="apply" class="apply">应用到预览</button></footer></dialog>
+    <template id="note-template"><section style="padding:12px 14px;margin:0 0 23px;background:#F5F1F7;border-left:2px solid #5D4679;"><p style="margin:0 0 5px;font-size:13px;font-weight:700;color:#5D4679;"><span leaf="">编者按</span></p><p style="margin:0;font-size:15px;line-height:1.8;color:#353039;"><span leaf="">按语内容</span></p></section></template>
+    <script>
+  function gzhShowToast(msg){
+    var t=document.getElementById('gzhToast');
+    t.textContent=msg;t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer=setTimeout(function(){t.classList.remove('show');},2800);
+  }
+  function gzhCopy(){
+    var el=document.getElementById('gzh-content');
+    var html=el.innerHTML;
+    var text=el.innerText;
+    var btn=document.getElementById('gzhCopyBtn');
+    var ok=false;
+    var handler=null;
+    var ta=document.createElement('textarea');
+    try{
+      // Write the original HTML directly to avoid browser range serialization
+      // injecting values such as text-align:start into the copied markup.
+      handler=function(e){
+        if(!e.clipboardData)return;
+        e.clipboardData.setData('text/html',html);
+        e.clipboardData.setData('text/plain',text);
+        e.preventDefault();
+      };
+      document.addEventListener('copy',handler,{once:true});
+      ta.value=text;
+      ta.setAttribute('readonly','');
+      ta.style.position='fixed';
+      ta.style.left='-9999px';
+      ta.style.top='0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      ok=document.execCommand('copy');
+    }catch(e){
+      ok=false;
+    }finally{
+      if(ta.parentNode)ta.parentNode.removeChild(ta);
+      if(handler)document.removeEventListener('copy',handler);
+    }
+    if(ok){
+      gzhShowToast('✅ 已复制！去公众号编辑器按 Ctrl/⌘+V 粘贴即可');
+      var old=btn.textContent;btn.textContent='✅ 已复制';
+      setTimeout(function(){btn.textContent=old;},2200);
+    }else{
+      gzhShowToast('⚠ 浏览器阻止复制，请换 Edge/Chrome 后重试');
+    }
+  }
+
+
+const panel=document.querySelector('.panel');
+const region=document.querySelector('#gzh-content').firstElementChild;
+const titleEl=document.querySelector('.meta h1');
+const noteInput=document.getElementById('noteInput');
+let currentNote=document.body.dataset.firstNote==='yes'?region.children[1]:null;
+let appliedNote=currentNote?.lastElementChild?.innerText||'';
+document.getElementById('manage').onclick=()=>{noteInput.value=appliedNote;panel.showModal();};
+document.getElementById('cancel').onclick=()=>panel.close();
+document.getElementById('apply').onclick=()=>{
+  currentNote?.remove(); currentNote=null; appliedNote=noteInput.value.trim();
+  if(appliedNote){
+    currentNote=document.getElementById('note-template').content.firstElementChild.cloneNode(true);
+    const inner=currentNote.lastElementChild;
+    inner.replaceChildren();
+    appliedNote.split(/\r?\n/).forEach((line,index)=>{
+      const span=document.createElement('span');span.setAttribute('leaf','');
+      if(index) inner.append(document.createElement('br'));
+      span.textContent=line;inner.append(span);
+    });
+    region.firstElementChild.after(currentNote);
+  }
+  panel.close();gzhShowToast('已应用到预览');
+};
+document.getElementById('titleCopy').onclick=async()=>{
+  try{await navigator.clipboard.writeText(titleEl.textContent);gzhShowToast('已复制标题');}
+  catch{const field=document.createElement('textarea');field.value=titleEl.textContent;panel.append(field);field.select();const ok=document.execCommand('copy');field.remove();gzhShowToast(ok?'已复制标题':'请选中标题后复制');}
+};
+document.getElementById('saveBody').onclick=()=>{
+  const a=document.createElement('a'); const url=URL.createObjectURL(new Blob(['\uFEFF',region.outerHTML],{type:'text/html;charset=utf-8'}));
+  a.href=url;a.download=document.body.dataset.filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000);
+};
+const figures=region.querySelectorAll('img');
+document.querySelectorAll('[data-i]').forEach(a=>{a.href=figures[Number(a.dataset.i)].src;});
+</script></body></html>

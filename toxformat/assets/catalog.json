@@ -1,0 +1,159 @@
+{
+  "version": "1.0.0",
+  "account": "未毒先知",
+  "libreoffice": "26.8.3.1",
+  "columns": {
+    "文献解析": {
+      "prefixes": [
+        "文献解析",
+        "论文解析"
+      ],
+      "default": "violet-folio",
+      "structure": "analysis",
+      "max_emphasis": 2,
+      "terms": [
+        "相关伴随学习",
+        "伴随相关学习",
+        "急性毒性评价",
+        "急性毒性评估",
+        "急性毒性预测",
+        "图卷积神经网络",
+        "化学品风险评估",
+        "人类相关端点",
+        "终点关联",
+        "图拓扑结构",
+        "小样本终点",
+        "剂量反应关系",
+        "交叉验证",
+        "置信区间",
+        "结构警示"
+      ]
+    },
+    "文献速读": {
+      "prefixes": [
+        "文献速读",
+        "论文速读"
+      ],
+      "default": "violet-digest",
+      "structure": "digest",
+      "max_emphasis": 2,
+      "terms": [
+        "伴随相关学习",
+        "知识迁移",
+        "数据稀缺",
+        "急性毒性评估",
+        "结构警示",
+        "图卷积",
+        "置信区间",
+        "外部验证",
+        "暴露水平",
+        "目标物种"
+      ]
+    }
+  },
+  "themes": {
+    "violet-folio": {
+      "name": "文献解析-紫罗兰",
+      "aliases": [
+        "紫墨书页",
+        "文献解析一"
+      ],
+      "version": "1.0.0",
+      "layout": "folio",
+      "component_file": "references/theme-violet-folio.md",
+      "underline": "border-bottom:1px solid #5D4679;font-weight:600;",
+      "ink": "#5D4679",
+      "title": "#30263E",
+      "paper": "#F5F1F7",
+      "line": "#D9CDE1"
+    },
+    "violet-digest": {
+      "name": "文献速读-紫罗兰",
+      "aliases": [
+        "论文速读-紫罗兰"
+      ],
+      "version": "1.0.0",
+      "layout": "digest",
+      "component_file": "references/theme-violet-digest.md",
+      "underline": "border-bottom:1px solid #5D4679;font-weight:600;",
+      "ink": "#5D4679",
+      "title": "#30263E",
+      "paper": "#F5F1F7",
+      "line": "#D9CDE1"
+    },
+    "graphite-minimal": {
+      "name": "石墨极简风",
+      "aliases": [
+        "石墨极简"
+      ],
+      "version": "1.0.0",
+      "layout": "editorial",
+      "component_file": "references/theme-graphite-minimal.md",
+      "underline": "border-bottom:2px solid #52525B;font-weight:600;",
+      "ink": "#52525B",
+      "title": "#27272A",
+      "paper": "#FAFAFA",
+      "line": "#E4E4E7"
+    },
+    "moyu-green": {
+      "name": "摸鱼绿",
+      "aliases": [],
+      "version": "1.0.0",
+      "layout": "editorial",
+      "component_file": "references/theme-moyu-green.md",
+      "underline": "border-bottom:2px solid #A7F3D0;font-weight:600;",
+      "ink": "#059669",
+      "title": "#064E3B",
+      "paper": "#ECFDF5",
+      "line": "#A7F3D0"
+    },
+    "red-white": {
+      "name": "红白色系",
+      "aliases": [],
+      "version": "1.0.0",
+      "layout": "editorial",
+      "component_file": "references/theme-red-white.md",
+      "underline": "border-bottom:2px solid #FECACA;font-weight:600;",
+      "ink": "#DC2626",
+      "title": "#171717",
+      "paper": "#FEF2F2",
+      "line": "#FECACA"
+    },
+    "zen-whitespace": {
+      "name": "留白禅意风",
+      "aliases": [],
+      "version": "1.0.0",
+      "layout": "editorial",
+      "component_file": "references/theme-zen-whitespace.md",
+      "underline": "border-bottom:1.5px solid #B5C8BC;font-weight:500;",
+      "ink": "#4A5D52",
+      "title": "#303D35",
+      "paper": "#F6F7F2",
+      "line": "#B5C8BC"
+    },
+    "moyu-ticket": {
+      "name": "摸鱼票据风",
+      "aliases": [],
+      "version": "1.0.0",
+      "layout": "editorial",
+      "component_file": "references/theme-moyu-ticket.md",
+      "underline": "border-bottom:2px solid #A7F3D0;font-weight:600;",
+      "ink": "#059669",
+      "title": "#1F2937",
+      "paper": "#F9FAF7",
+      "line": "#A7F3D0"
+    },
+    "olive-journal": {
+      "name": "橄榄手记",
+      "aliases": [],
+      "version": "1.0.0",
+      "layout": "editorial",
+      "component_file": "references/theme-olive-journal.md",
+      "underline": "border-bottom:2px solid #ed7b2f;font-weight:600;",
+      "ink": "#1e1f23",
+      "title": "#1e1f23",
+      "paper": "#F5F2EB",
+      "line": "#ed7b2f"
+    }
+  }
+}
