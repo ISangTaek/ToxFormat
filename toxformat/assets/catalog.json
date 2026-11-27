@@ -83,12 +83,12 @@
       "name": "文献解析-紫罗兰",
       "aliases": [
         "紫墨书页",
-        "文献解析一"
+        "文献解析一",
+        "文献解析·紫罗兰"
       ],
-      "version": "1.0.0",
+      "version": "1.1.0",
       "layout": "folio",
       "component_file": "references/theme-violet-folio.md",
-      "underline": "border-bottom:1px solid #5D4679;font-weight:600;",
       "ink": "#5D4679",
       "title": "#30263E",
       "paper": "#F5F1F7",
@@ -97,12 +97,12 @@
     "violet-digest": {
       "name": "文献速读-紫罗兰",
       "aliases": [
-        "论文速读-紫罗兰"
+        "论文速读-紫罗兰",
+        "文献速读·紫罗兰"
       ],
-      "version": "1.0.0",
+      "version": "1.1.0",
       "layout": "digest",
       "component_file": "references/theme-violet-digest.md",
-      "underline": "border-bottom:1px solid #5D4679;font-weight:600;",
       "ink": "#5D4679",
       "title": "#30263E",
       "paper": "#F5F1F7",

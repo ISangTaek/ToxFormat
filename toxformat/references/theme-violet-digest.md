@@ -8,6 +8,7 @@
 |---|---|
 | 刊首与文末 | 紫墨主色 #5D4679，窄幅花叶关注条，末尾细线 END |
 | 逐篇标题 | 左对齐 21px 宋体，12px 篇序随本稿条目数量生成 |
+| 正文强调 | 关键词用黑色加粗，关键句用主题紫色（#5D4679）加粗，期刊名称用黑色加粗斜体。每篇推文选约两至三处关键句，三篇速读合刊共用此额度。 |
 | 文献信息 | 期刊与原稿所列影响因子同排，日期和团队另起一行，以浅紫竖线归组 |
 | 速读段落 | 15px 正文，行高 1.9，紫色行内字段名与正文同读 |
 | 原文入口 | 网址可点击并换行，二维码按原稿逐篇配对，显示宽度 84px |
@@ -35,7 +36,7 @@
 ### 文献信息
 
 ```html
-<section style="margin:0 0 18px;padding:7px 0 7px 11px;border-left:2px solid #BEABC9;"><p style="margin:0;color:#493453;font-size:15px;font-family:Baskerville,Georgia,'Times New Roman',serif,serif;line-height:1.5;"><strong><span leaf="">{{期刊名}}</span></strong><span style="font-size:12px;"><span leaf="">{{期刊附注}}</span></span></p><p style="margin:2px 0 0;font-size:12px;line-height:1.65;color:#65576C;"><span leaf="">{{日期}}</span><span leaf="">　·　</span><span leaf="">{{团队}}</span></p></section>
+<section style="margin:0 0 18px;padding:7px 0 7px 11px;border-left:2px solid #BEABC9;"><p style="margin:0;color:#493453;font-size:15px;font-family:Baskerville,Georgia,'Times New Roman',serif,serif;line-height:1.5;"><strong style="color:#000000;font-weight:700;font-style:italic;"><span leaf="">{{期刊名}}</span></strong><span style="font-size:12px;"><span leaf="">{{期刊附注}}</span></span></p><p style="margin:2px 0 0;font-size:12px;line-height:1.65;color:#65576C;"><span leaf="">{{日期}}</span><span leaf="">　·　</span><span leaf="">{{团队}}</span></p></section>
 ```
 
 ### 速读段落

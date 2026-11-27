@@ -8,6 +8,7 @@ import re
 from urllib.parse import unquote
 
 from sections import CATALOG, CHAPTERS, LABEL, NOTE, ROOT, URL
+from violet_emphasis import article_journals, key_sentences
 
 
 def esc(s):
@@ -99,6 +100,20 @@ class Renderer:
         self.dark = self.theme["title"]
         self.paper = self.theme["paper"]
         self.spans = {b.id: select_spans(b, self.column) for b in article.walk()}
+        self.violet = theme_id in ("violet-folio", "violet-digest")
+        self.special = {}
+        if self.violet:
+            findings = key_sentences(article)
+            journals = article_journals(article)
+            for block in article.walk():
+                spans = [(a, z, "journal") for a, z in journals.get(block.id, ())]
+                if block.id in findings:
+                    spans.append((*findings[block.id], "finding"))
+                self.special[block.id] = spans
+                self.spans[block.id] = [
+                    (a, z) for a, z in self.spans[block.id]
+                    if not any(a < end and start < z for start, end, _ in spans)
+                ]
         self.images = {}
         self.image_map = image_map or {}
         self.heading_no = 0
@@ -152,6 +167,9 @@ class Renderer:
                 continue
             marks = dict(run.marks)
             ranges = [(max(lo, a), min(hi, z), "em") for a, z in auto if a < hi and z > lo]
+            for a, z, kind in self.special.get(b.id, ()):
+                if a < hi and z > lo:
+                    ranges.append((max(lo, a), min(hi, z), kind))
             for m in URL.finditer(b.text):
                 url = m.group().rstrip(".,);]")
                 a, z = m.start(), m.start() + len(url)
@@ -162,9 +180,14 @@ class Renderer:
                 raw = run.text[a - left : z - left]
                 value = leaf(raw)
                 css = []
-                if any(x <= a < y and t == "em" for x, y, t in ranges):
+                if not self.violet and any(x <= a < y and t == "em" for x, y, t in ranges):
                     css.append(auto_underline)
-                if marks.get("bold"):
+                active = {t for x, y, t in ranges if x <= a < y}
+                if self.violet and (active & {"finding", "journal", "em"} or marks.get("bold")):
+                    color = self.ink if "finding" in active and "journal" not in active else "#000000"
+                    italic = "font-style:italic;" if "journal" in active else ""
+                    value = f'<strong style="font-weight:700;color:{color};{italic}">{value}</strong>'
+                elif marks.get("bold"):
                     value = f'<strong style="font-weight:700;color:{self.dark};">{value}</strong>'
                 if marks.get("italic"):
                     css.append("font-style:italic;")
@@ -192,7 +215,7 @@ class Renderer:
                     css.append("font-family:Consolas,monospace;")
                 if css:
                     value = '<span style="' + "".join(css) + '">' + value + "</span>"
-                href = run.link or next((t for x, y, t in ranges if x <= a < y and t != "em"), "")
+                href = run.link or next((t for x, y, t in ranges if x <= a < y and t not in {"em", "finding", "journal"}), "")
                 if href:
                     value = f'<a href="{esc(href)}" style="color:{self.ink};text-decoration:underline;overflow-wrap:anywhere;">{value}</a>'
                 pieces.append(value)

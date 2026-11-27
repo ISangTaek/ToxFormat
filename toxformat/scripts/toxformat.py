@@ -46,6 +46,10 @@ def slug(name):
 
 def entry_manifest(b, renderer):
     spans = [{"start": a, "end": z, "text": b.text[a:z]} for a, z in renderer.spans[b.id]]
+    spans.extend(
+        {"start": a, "end": z, "text": b.text[a:z], "kind": kind}
+        for a, z, kind in renderer.special.get(b.id, ())
+    )
     originals = []
     images = []
     links = []
