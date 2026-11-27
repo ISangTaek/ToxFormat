@@ -6,6 +6,8 @@
 
 附上 Word，输入「对这份文档进行公众号排版」。文献解析提交一份，文献速读提交三份，各占一个位置。文件名使用「栏目-日期-题名」，默认紫罗兰，提示词可指定其他主题。Agent 提取原稿，默认按篇检查 AI 感和错别字，交付报告和排版预览后询问是否进行事实核查。提示词明确要求「进行事实核查」时，随稿核对原始文献。打开预览，点击「复制到公众号」。
 
-完整操作见[技能说明](SKILL.md)。Python 3.9+ 可直接运行脚本；Word 收稿格式为 `.docx`，无需安装 LibreOffice。栏目和主题可按[登记说明](references/catalog-guide.md)继续扩展。
+排版并配图时说「对这份文档进行公众号排版，并生成主题图」。也可在交付后接受配图邀请。内置的[主题图流程](references/article-art.md)按稿件选择单一主体，生成灰纸、黑墨网点与单一深蓝紫专色的独立图片。模型名称与中文描述均用特粗黑，模型名字号最大。下方亮点用小字，所有数字使用同一深蓝紫。
+
+完整操作见[技能说明](SKILL.md)。Python 3.9+ 可直接运行排版脚本；Word 收稿格式为 `.docx`，无需安装 LibreOffice。栏目和主题可按[登记说明](references/catalog-guide.md)继续扩展。
 
 上游排版文档及许可保留于包内。[中文档案](upstream-readme.zh.md) · [English upstream notes](upstream-readme.en.md) · [版权与许可](THIRD-PARTY-NOTICES.md)

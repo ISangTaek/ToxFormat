@@ -223,6 +223,22 @@ class WorkflowTest(unittest.TestCase):
         audit = self.command("report", *FILES, "--evidence", ROOT / "tests/模拟合刊核查.json")["audit"]
         self.assertEqual(audit["facts"], [])
 
+    def test_optional_theme_image_handoff(self):
+        self.assertIsNone(self.response["theme_image"])
+        self.assertIn("合刊", self.response["theme_image_follow_up"])
+        enabled = self.command("format", *FILES, "--theme-image", "--out", self.out.parent)
+        self.assertEqual(enabled["output"], self.response["output"])
+        self.assertIsNone(enabled["theme_image_follow_up"])
+        self.assertEqual(enabled["follow_up"], self.response["follow_up"])
+        handoff = enabled["theme_image"]
+        self.assertTrue(Path(handoff["workflow"]).is_file())
+        self.assertEqual(Path(handoff["manuscript"]), self.out / "复验清单.json")
+        single = self.command("format", FILES[0], "--column", "文献解析", "--fact-check",
+                              "--note", "生成主题图", "--out", self.work / "single")
+        self.assertIsNone(single["theme_image"])
+        self.assertIn("这篇稿件", single["theme_image_follow_up"])
+        self.assertIsNone(single["follow_up"])
+
     def test_reject_binary_doc(self):
         binary = next((ROOT / "tests/legacy").glob("*.doc"))
         proc = subprocess.run(

@@ -276,6 +276,16 @@ def execute(args):
         "report": str(target / "审稿参考.md"),
         "preview": str(target / "预览.html"),
         "follow_up": None if args.fact_check else "是否要对照原始文献进行事实核查？",
+        "theme_image": (
+            {
+                "workflow": str((ROOT / "references/article-art.md").resolve()),
+                "manuscript": str(target / "复验清单.json"),
+            }
+            if args.theme_image else None
+        ),
+        "theme_image_follow_up": None if args.theme_image else (
+            "需要为这期合刊生成主题图吗？" if len(inputs) > 1 else "需要为这篇稿件生成主题图吗？"
+        ),
         "body_sha256": manifest["body_sha256"],
         "audit": manifest["audit_summary"],
         "warnings": warnings,
@@ -314,6 +324,7 @@ def main():
             cmd.add_argument("--media-dir", help="按图片校验值提取 Word 中的原图和二维码")
             cmd.add_argument("--save", help="将完整 JSON 保存到文件")
         if name == "format":
+            cmd.add_argument("--theme-image", action="store_true", help="返回内置主题图流程和本次稿件，供宿主生成图片")
             cmd.add_argument("--follow", action="store_true", help="按编辑要求加入刊首关注提示")
             cmd.add_argument("--out", default="ToxFormat输出")
             cmd.add_argument("--image-map", help="可选的图片 SHA-256 到已上传素材 HTTPS 地址的 JSON")
